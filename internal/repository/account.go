@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
+	"time"
 
 	"bank_account/internal/models"
 )
@@ -14,35 +16,76 @@ func NewAccountRepo(db *sql.DB) *AccountRepo {
 	return &AccountRepo{db: db}
 }
 
-func (r *AccountRepo) GetAccount(id int) (*models.Account, error) {
+func (r *AccountRepo) CreateAccount(account *models.Account) error {
+	query := `INSERT INTO accounts (id, name, balance, created_at, version) VALUES ($1, $2, $3, $4, $5)`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := r.db.ExecContext(ctx, query, account.ID, account.Owner, account.Balance, account.CreatedAt, account.Version)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *AccountRepo) GetAccount(id string) (*models.Account, error) {
+	query := `SELECT id, name, balance, created_at, version FROM accounts WHERE id = $1`
+
 	var account models.Account
-	err := r.db.QueryRow("SELECT * FROM accounts WHERE id = $1", id).Scan(&account.ID, &account.Name, &account.Balance)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&account.ID,
+		&account.Owner,
+		&account.Balance,
+		&account.CreatedAt,
+		&account.Version,
+	)
 	if err != nil {
 		return nil, err
 	}
+
 	return &account, nil
 }
 
 func (r *AccountRepo) UpdateAccount(account *models.Account) error {
-	_, err := r.db.Exec("UPDATE accounts SET name = $1, balance = $2 WHERE id = $3", account.Name, account.Balance, account.ID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+	query := `UPDATE accounts SET name = $1, balance = $2, created_at = $3, version = version + 1 
+	WHERE id = $5  AND version = $4
+	RETURNING version`
 
-func (r *AccountRepo) CreateAccount(account *models.Account) error {
-	_, err := r.db.Exec("INSERT INTO accounts (name, balance) VALUES ($1, $2)", account.Name, account.Balance)
+	args := []interface{}{
+		account.Owner,
+		account.Balance,
+		account.CreatedAt,
+		account.Version,
+		account.ID,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&account.Version)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (r *AccountRepo) DeleteAccount(id int) error {
-	_, err := r.db.Exec("DELETE FROM accounts WHERE id = $1", id)
+	query := `DELETE FROM accounts WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

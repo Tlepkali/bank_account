@@ -1,7 +1,11 @@
 package models
 
+import "time"
+
 type Account struct {
-	ID      int
-	Name    string
-	Balance float64
+	ID        string    `json:"id"`
+	Owner     string    `json:"name"`
+	Balance   float64   `json:"balance"`
+	CreatedAt time.Time `json:"created_at"`
+	Version   int       `json:"version"`
 }

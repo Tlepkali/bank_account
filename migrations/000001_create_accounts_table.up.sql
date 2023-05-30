@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS accounts (
+    id UUID PRIMARY KEY,
+    owner TEXT NOT NULL,
+    balance BIGINT NOT NULL
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version INT NOT NULL DEFAULT 1
+);
