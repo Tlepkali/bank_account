@@ -1,3 +1,4 @@
 {
+    "port" : ":8080",
     "dsn" : "postgresql://admin:admin@localhost:5432/account?sslmode=disable"
 }

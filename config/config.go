@@ -7,7 +7,8 @@ import (
 )
 
 type Config struct {
-	DSN string `json:"dsn"`
+	Port string `json:"port"`
+	DSN  string `json:"dsn"`
 }
 
 var (
