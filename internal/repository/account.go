@@ -17,12 +17,12 @@ func NewAccountRepo(db *sql.DB) *AccountRepo {
 }
 
 func (r *AccountRepo) CreateAccount(account *models.Account) error {
-	query := `INSERT INTO accounts (id, name, balance, created_at, version) VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT INTO accounts (id, name, balance) VALUES ($1, $2, $3)`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := r.db.ExecContext(ctx, query, account.ID, account.Owner, account.Balance, account.CreatedAt, account.Version)
+	_, err := r.db.ExecContext(ctx, query, account.ID, account.Owner, account.Balance)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (r *AccountRepo) UpdateAccount(account *models.Account) error {
 	return nil
 }
 
-func (r *AccountRepo) DeleteAccount(id int) error {
+func (r *AccountRepo) DeleteAccount(id string) error {
 	query := `DELETE FROM accounts WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
