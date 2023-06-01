@@ -41,6 +41,5 @@ func (c *Config) configParser() {
 	port := os.Getenv("PORT")
 
 	c.DSN = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, dbPort, user, password, dbname)
-	fmt.Println(c.DSN)
 	c.Port = port
 }

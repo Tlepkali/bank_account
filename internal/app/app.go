@@ -12,7 +12,7 @@ import (
 
 func Run() {
 	config := config.GetConfig()
-	log.Println("Configurated")
+	log.Println("Configs are parsed")
 
 	db, err := postgres.OpenDB(config.DSN)
 	if err != nil {
@@ -27,8 +27,6 @@ func Run() {
 	service := service.NewService(repo)
 
 	handler := handler.NewHandler(service)
-
-	log.Println(config.Port)
 
 	log.Println("Server is starting on port", config.Port)
 

@@ -4,6 +4,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+
+	_ "bank_account/docs"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func (h *Handler) InitRoutes() http.Handler {
@@ -14,6 +18,10 @@ func (h *Handler) InitRoutes() http.Handler {
 	router.Get("/accounts", h.GetAllAccounts)
 	router.Put("/account/{accountNumber}", h.UpdateAccount)
 	router.Delete("/account/{accountNumber}", h.DeleteAccount)
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"), // The url pointing to API definition
+	))
 
 	return router
 }

@@ -42,8 +42,8 @@ func (h *Handler) readJSON(w http.ResponseWriter, r *http.Request, dst interface
 	return nil
 }
 
-func (h *Handler) error(w http.ResponseWriter, r *http.Request, code int, err error) {
-	h.respond(w, r, code, map[string]string{"error": err.Error()})
+func (h *Handler) error(w http.ResponseWriter, r *http.Request, code int, err ErrorResponse) {
+	h.respond(w, r, code, err)
 }
 
 func (h *Handler) respond(w http.ResponseWriter, r *http.Request, code int, data interface{}, headers ...http.Header) {
@@ -52,7 +52,7 @@ func (h *Handler) respond(w http.ResponseWriter, r *http.Request, code int, data
 	if data != nil {
 		js, err := json.MarshalIndent(data, "", "\t")
 		if err != nil {
-			h.error(w, r, http.StatusInternalServerError, err)
+			h.error(w, r, http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		}
 
 		w.Write(js)
