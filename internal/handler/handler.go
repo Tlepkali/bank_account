@@ -50,9 +50,11 @@ func (h *Handler) respond(w http.ResponseWriter, r *http.Request, code int, data
 	w.WriteHeader(code)
 
 	if data != nil {
-		if err := json.NewEncoder(w).Encode(data); err != nil {
+		js, err := json.MarshalIndent(data, "", "\t")
+		if err != nil {
 			h.error(w, r, http.StatusInternalServerError, err)
-			return
 		}
+
+		w.Write(js)
 	}
 }

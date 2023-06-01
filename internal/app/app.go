@@ -17,8 +17,10 @@ func Run() {
 
 	db, err := postgres.OpenDB(config.DSN)
 	if err != nil {
-		panic(err)
+		log.Println("Error while connecting to DB:", err)
+		return
 	}
+	defer db.Close()
 	log.Println("Connected to DB")
 
 	repo := repository.NewRepository(db)
@@ -28,5 +30,9 @@ func Run() {
 	handler := handler.NewHandler(service)
 
 	log.Println("Server is starting on port", config.Port)
-	log.Fatal(http.ListenAndServe(config.Port, handler.InitRoutes()))
+	err = http.ListenAndServe(config.Port, handler.InitRoutes())
+	if err != nil {
+		log.Println("Error while starting server:", err)
+		return
+	}
 }

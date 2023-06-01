@@ -2,7 +2,7 @@ package models
 
 import "bank_account/pkg/validator"
 
-func (a *Account) ValidateAccount(v *validator.Validator) map[string]string {
+func (a *CreateAccountDTO) Validate(v *validator.Validator) map[string]string {
 	if a.Owner == "" {
 		v.AddError("owner", "must be provided")
 	}

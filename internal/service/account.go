@@ -1,6 +1,10 @@
 package service
 
-import "bank_account/internal/models"
+import (
+	"fmt"
+
+	"bank_account/internal/models"
+)
 
 type AccountService struct {
 	repo models.AccountRepository
@@ -10,21 +14,24 @@ func NewAccountService(repo models.AccountRepository) *AccountService {
 	return &AccountService{repo: repo}
 }
 
-func (s *AccountService) CreateAccount(account *models.Account) error {
+func (s *AccountService) CreateAccount(dto *models.CreateAccountDTO) (string, error) {
+	fmt.Println(dto)
+	account := &models.Account{
+		Owner:   dto.Owner,
+		Balance: dto.Balance,
+	}
 	account.GenerateAccountNumber()
-	return s.repo.CreateAccount(account)
-}
 
-func (s *AccountService) GetAccountByID(id int64) (*models.Account, error) {
-	return s.repo.GetAccountByID(id)
+	fmt.Println("Account number generated: ", account.AccountNumber)
+	return s.repo.CreateAccount(account)
 }
 
 func (s *AccountService) GetAccountByNumber(accountNumber string) (*models.Account, error) {
 	return s.repo.GetAccountByNumber(accountNumber)
 }
 
-func (s *AccountService) GetAllAccounts(limit, offset int) ([]*models.Account, error) {
-	return s.repo.GetAllAccounts(limit, offset)
+func (s *AccountService) GetAllAccounts() ([]*models.Account, error) {
+	return s.repo.GetAllAccounts()
 }
 
 func (s *AccountService) UpdateAccount(account *models.Account) error {

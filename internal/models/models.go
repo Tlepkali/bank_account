@@ -11,20 +11,28 @@ type Account struct {
 	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
 }
 
-type AccountService interface {
-	CreateAccount(account *Account) error
-	GetAccountByID(id int64) (*Account, error)
+type CreateAccountDTO struct {
+	Owner   string  `json:"owner"`
+	Balance float64 `json:"balance"`
+}
+
+type AccountRepository interface {
+	CreateAccount(account *Account) (string, error)
 	GetAccountByNumber(accountNumber string) (*Account, error)
-	GetAllAccounts(limit, offset int) ([]*Account, error)
+	GetAllAccounts() ([]*Account, error)
 	UpdateAccount(account *Account) error
 	DeleteAccount(accountNumber string) error
 }
 
-type AccountRepository interface {
-	CreateAccount(account *Account) error
-	GetAccountByID(id int64) (*Account, error)
+type AccountService interface {
+	CreateAccount(account *CreateAccountDTO) (string, error)
 	GetAccountByNumber(accountNumber string) (*Account, error)
-	GetAllAccounts(limit, offset int) ([]*Account, error)
+	GetAllAccounts() ([]*Account, error)
 	UpdateAccount(account *Account) error
 	DeleteAccount(accountNumber string) error
+}
+
+type CreateAccountRequest struct {
+	Owner   string  `json:"owner"`
+	Balance float64 `json:"balance"`
 }

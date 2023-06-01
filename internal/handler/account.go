@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 
 	"bank_account/internal/models"
 	"bank_account/pkg/validator"
@@ -11,123 +11,79 @@ import (
 )
 
 func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Owner   string  `json:"owner"`
-		Balance float64 `json:"balance"`
-	}
+	var account *models.CreateAccountDTO
 
-	if err := h.readJSON(w, r, &input); err != nil {
+	if err := h.readJSON(w, r, &account); err != nil {
 		h.error(w, r, http.StatusBadRequest, err)
 		return
 	}
 
-	account := &models.Account{
-		Owner:   input.Owner,
-		Balance: input.Balance,
-	}
-
 	v := validator.New()
 
-	if err := account.ValidateAccount(v); err != nil {
+	if err := account.Validate(v); err != nil {
 		h.respond(w, r, http.StatusUnprocessableEntity, v.Errors)
 		return
 	}
 
-	err := h.service.AccountService.CreateAccount(account)
+	accountNumber, err := h.service.AccountService.CreateAccount(account)
+	fmt.Println(accountNumber)
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err)
-		return
+		switch err {
+		case models.ErrDuplicateAccount:
+			h.error(w, r, http.StatusConflict, err)
+			return
+		default:
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	headers := make(http.Header)
-	headers.Set("Location", "/accounts/"+account.AccountNumber)
+	headers.Set("Location", "/accounts/"+accountNumber)
 
-	resp := map[string]*models.Account{
-		"account_number": account,
+	resp := map[string]string{
+		"account_number": accountNumber,
 	}
 
 	h.respond(w, r, http.StatusCreated, resp, headers)
 }
 
-func (h *Handler) GetAccountByID(w http.ResponseWriter, r *http.Request) {
-	paramId := chi.URLParam(r, "id")
-
-	id, err := strconv.ParseInt(paramId, 10, 64)
-	if err != nil {
-		h.error(w, r, http.StatusBadRequest, err)
-		return
-	}
-
-	account, err := h.service.AccountService.GetAccountByID(id)
-	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err)
-		return
-	}
-
-	h.respond(w, r, http.StatusOK, account)
-}
-
 func (h *Handler) GetAccountByNumber(w http.ResponseWriter, r *http.Request) {
-	paramNumber := chi.URLParam(r, "number")
+	paramNumber := chi.URLParam(r, "accountNumber")
 
 	account, err := h.service.AccountService.GetAccountByNumber(paramNumber)
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err)
-		return
+		switch err {
+		case models.ErrNotFound:
+			h.error(w, r, http.StatusNotFound, err)
+		default:
+			h.error(w, r, http.StatusInternalServerError, err)
+		}
 	}
 
 	h.respond(w, r, http.StatusOK, account)
 }
 
 func (h *Handler) GetAllAccounts(w http.ResponseWriter, r *http.Request) {
-	paramPage := chi.URLParam(r, "page")
-
-	page, err := strconv.Atoi(paramPage)
-	if err != nil {
-		h.error(w, r, http.StatusBadRequest, err)
-		return
-	}
-
-	paramPageSize := chi.URLParam(r, "page_size")
-
-	pageSize, err := strconv.Atoi(paramPageSize)
-	if err != nil {
-		h.error(w, r, http.StatusBadRequest, err)
-		return
-	}
-
-	accounts, err := h.service.AccountService.GetAllAccounts(pageSize, page)
+	accounts, err := h.service.AccountService.GetAllAccounts()
 	if err != nil {
 		h.error(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
-	metadata := map[string]int{
-		"page":      page,
-		"page_size": pageSize,
-	}
-
-	resp := map[string]interface{}{
-		"metadata": metadata,
-		"accounts": accounts,
-	}
-
-	h.respond(w, r, http.StatusOK, resp)
+	h.respond(w, r, http.StatusOK, accounts)
 }
 
 func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
-	paramNumber := chi.URLParam(r, "number")
+	paramNumber := chi.URLParam(r, "accountNumber")
 
 	account, err := h.service.AccountService.GetAccountByNumber(paramNumber)
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err)
+		h.error(w, r, http.StatusNotFound, err)
 		return
 	}
 
-	var input struct {
-		Owner   string  `json:"owner"`
-		Balance float64 `json:"balance"`
-	}
+	var input *models.CreateAccountDTO
 
 	if err := h.readJSON(w, r, &input); err != nil {
 		h.error(w, r, http.StatusBadRequest, err)
@@ -136,7 +92,7 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 
 	v := validator.New()
 
-	if err := account.ValidateAccount(v); err != nil {
+	if err := input.Validate(v); err != nil {
 		h.respond(w, r, http.StatusUnprocessableEntity, v.Errors)
 		return
 	}
@@ -146,21 +102,37 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.AccountService.UpdateAccount(account)
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err)
-		return
+		switch err {
+		case models.ErrNotFound:
+			h.error(w, r, http.StatusNotFound, err)
+			return
+		default:
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
 	h.respond(w, r, http.StatusOK, account)
 }
 
 func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	paramNumber := chi.URLParam(r, "number")
+	paramNumber := chi.URLParam(r, "accountNumber")
 
 	err := h.service.AccountService.DeleteAccount(paramNumber)
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, err)
-		return
+		switch err {
+		case models.ErrNotFound:
+			h.error(w, r, http.StatusNotFound, err)
+			return
+		default:
+			h.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
 	}
 
-	h.respond(w, r, http.StatusOK, nil)
+	resp := map[string]string{
+		"message": "account deleted successfully",
+	}
+
+	h.respond(w, r, http.StatusOK, resp)
 }
