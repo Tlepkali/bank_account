@@ -2,7 +2,6 @@ package app
 
 import (
 	"log"
-	"net/http"
 
 	"bank_account/config"
 	"bank_account/internal/handler"
@@ -30,9 +29,8 @@ func Run() {
 	handler := handler.NewHandler(service)
 
 	log.Println("Server is starting on port", config.Port)
-	err = http.ListenAndServe(config.Port, handler.InitRoutes())
-	if err != nil {
-		log.Println("Error while starting server:", err)
-		return
+
+	if err := Serve(config, handler.InitRoutes()); err != nil {
+		log.Println("Error while running http server:", err)
 	}
 }
