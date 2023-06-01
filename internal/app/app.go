@@ -28,6 +28,8 @@ func Run() {
 
 	handler := handler.NewHandler(service)
 
+	log.Println(config.Port)
+
 	log.Println("Server is starting on port", config.Port)
 
 	if err := Serve(config, handler.InitRoutes()); err != nil {
