@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -31,8 +29,6 @@ func (s *testServer) getByNumber(t *testing.T, url string) (resp *http.Response,
 }
 
 func (s *testServer) post(t *testing.T, url string, body []byte) (resp *http.Response, err error) {
-	json.Marshal(body)
-
 	resp, err = http.Post(s.URL+url, "application/json", strings.NewReader(string(body)))
 
 	if err != nil {
@@ -71,20 +67,15 @@ func (s *testServer) delete(t *testing.T, url string) (resp *http.Response, err 
 }
 
 func (s *testServer) checkResponse(resp *http.Response, expectedStatusCode int, expectedBody string) error {
-	fmt.Println(resp.StatusCode)
 	if resp.StatusCode != expectedStatusCode {
 		return errors.New("status code is not 200")
 	}
-
-	fmt.Println(resp.StatusCode)
 
 	if resp.StatusCode == http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
-
-		fmt.Println(string(body))
 
 		if strings.Contains(string(body), expectedBody) {
 			return errors.New("body is not equal")

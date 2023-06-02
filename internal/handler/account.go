@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"bank_account/internal/models"
@@ -36,7 +35,6 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accountNumber, err := h.service.AccountService.CreateAccount(account)
-	fmt.Println(accountNumber)
 	if err != nil {
 		switch err {
 		case models.ErrDuplicateAccount:

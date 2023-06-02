@@ -1,8 +1,6 @@
 package service
 
 import (
-	"fmt"
-
 	"bank_account/internal/models"
 )
 
@@ -15,14 +13,12 @@ func NewAccountService(repo models.AccountRepository) *AccountService {
 }
 
 func (s *AccountService) CreateAccount(dto *models.CreateAccountDTO) (string, error) {
-	fmt.Println(dto)
 	account := &models.Account{
 		Owner:   dto.Owner,
 		Balance: dto.Balance,
 	}
 	account.GenerateAccountNumber()
 
-	fmt.Println("Account number generated: ", account.AccountNumber)
 	return s.repo.CreateAccount(account)
 }
 
