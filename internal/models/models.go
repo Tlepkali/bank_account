@@ -24,6 +24,7 @@ type AccountRepository interface {
 	DeleteAccount(accountNumber string) error
 }
 
+//go:generate mockery --name AccountService
 type AccountService interface {
 	CreateAccount(account *CreateAccountDTO) (string, error)
 	GetAccountByNumber(accountNumber string) (*Account, error)

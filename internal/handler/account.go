@@ -10,16 +10,16 @@ import (
 	"github.com/go-chi/chi"
 )
 
-//	@Summary		Create a new account
-//	@Tags			account
-//	@Description	Create a new account with the input payload
-//	@Accept			json
-//	@Produce		json
-//	@Param			account	body		models.CreateAccountDTO	true	"Account"
-//	@Success		201		{object}	MessageResponse
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		422		{object}	ErrorResponse
-//	@Router			/account [post]
+// @Summary		Create a new account
+// @Tags			account
+// @Description	Create a new account with the input payload
+// @Accept			json
+// @Produce		json
+// @Param			account	body		models.CreateAccountDTO	true	"Account"
+// @Success		201		{object}	MessageResponse
+// @Failure		400		{object}	ErrorResponse
+// @Failure		422		{object}	ErrorResponse
+// @Router			/account [post]
 func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var account *models.CreateAccountDTO
 
@@ -56,14 +56,14 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	h.respond(w, r, http.StatusCreated, message, headers)
 }
 
-//	@Summary		Get an account by account number
-//	@Tags			account
-//	@Description	Get an account by account number
-//	@Produce		json
-//	@Success		200	{object}	models.Account
-//	@Failure		400	{object}	ErrorResponse
-//	@Failure		404	{object}	ErrorResponse
-//	@Router			/account/{accountNumber} [get]
+// @Summary		Get an account by account number
+// @Tags			account
+// @Description	Get an account by account number
+// @Produce		json
+// @Success		200	{object}	models.Account
+// @Failure		400	{object}	ErrorResponse
+// @Failure		404	{object}	ErrorResponse
+// @Router			/account/{accountNumber} [get]
 func (h *Handler) GetAccountByNumber(w http.ResponseWriter, r *http.Request) {
 	paramNumber := chi.URLParam(r, "accountNumber")
 
@@ -82,42 +82,42 @@ func (h *Handler) GetAccountByNumber(w http.ResponseWriter, r *http.Request) {
 	h.respond(w, r, http.StatusOK, account)
 }
 
-//	@Summary		Get all accounts
-//	@Tags			accounts
-//	@Description	Get all accounts
-//	@Produce		json
-//	@Success		200	{object}	[]models.Account
-//	@Failure		400	{object}	ErrorResponse
-//	@Failure		404	{object}	ErrorResponse
-//	@Router			/accounts [get]
+// @Summary		Get all accounts
+// @Tags			accounts
+// @Description	Get all accounts
+// @Produce		json
+// @Success		200	{object}	[]models.Account
+// @Failure		400	{object}	ErrorResponse
+// @Failure		404	{object}	ErrorResponse
+// @Router			/accounts [get]
 func (h *Handler) GetAllAccounts(w http.ResponseWriter, r *http.Request) {
 	accounts, err := h.service.AccountService.GetAllAccounts()
 	if err != nil {
-		h.error(w, r, http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
-		return
+		switch err {
+		case models.ErrNotFound:
+			h.error(w, r, http.StatusNotFound, ErrorResponse{Error: err.Error()})
+			return
+		default:
+			h.error(w, r, http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
+			return
+		}
 	}
 
 	h.respond(w, r, http.StatusOK, accounts)
 }
 
-//	@Summary		Update an account by account number
-//	@Tags			account
-//	@Description	Update an account by account number
-//	@Accept			json
-//	@Produce		json
-//	@Param			input	body		models.CreateAccountDTO	true	"Account"
-//	@Success		200		{object}	models.Account
-//	@Failure		400		{object}	ErrorResponse
-//	@Failure		404		{object}	ErrorResponse
-//	@Router			/account/{accountNumber} [put]
+// @Summary		Update an account by account number
+// @Tags			account
+// @Description	Update an account by account number
+// @Accept			json
+// @Produce		json
+// @Param			input	body		models.CreateAccountDTO	true	"Account"
+// @Success		200		{object}	models.Account
+// @Failure		400		{object}	ErrorResponse
+// @Failure		404		{object}	ErrorResponse
+// @Router			/account/{accountNumber} [put]
 func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	paramNumber := chi.URLParam(r, "accountNumber")
-
-	account, err := h.service.AccountService.GetAccountByNumber(paramNumber)
-	if err != nil {
-		h.error(w, r, http.StatusNotFound, ErrorResponse{Error: err.Error()})
-		return
-	}
 
 	var input *models.CreateAccountDTO
 
@@ -130,6 +130,12 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 
 	if err := input.Validate(v); err != nil {
 		h.respond(w, r, http.StatusUnprocessableEntity, v.Errors)
+		return
+	}
+
+	account, err := h.service.AccountService.GetAccountByNumber(paramNumber)
+	if err != nil {
+		h.error(w, r, http.StatusNotFound, ErrorResponse{Error: err.Error()})
 		return
 	}
 
@@ -151,15 +157,15 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	h.respond(w, r, http.StatusOK, account)
 }
 
-//	@Summary		Delete an account by account number
-//	@Tags			account
-//	@Description	Delete an account by account number
-//	@Produce		json
-//	@Param			accountNumber	path		string	true	"Account Number"
-//	@Success		200				{object}	MessageResponse
-//	@Failure		400				{object}	ErrorResponse
-//	@Failure		404				{object}	ErrorResponse
-//	@Router			/account/{accountNumber} [delete]
+// @Summary		Delete an account by account number
+// @Tags			account
+// @Description	Delete an account by account number
+// @Produce		json
+// @Param			accountNumber	path		string	true	"Account Number"
+// @Success		200				{object}	MessageResponse
+// @Failure		400				{object}	ErrorResponse
+// @Failure		404				{object}	ErrorResponse
+// @Router			/account/{accountNumber} [delete]
 func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	paramNumber := chi.URLParam(r, "accountNumber")
 

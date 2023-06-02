@@ -1,14 +1,83 @@
 package handler
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"bank_account/internal/models"
 	"bank_account/internal/repository"
 	"bank_account/internal/service"
+	"bank_account/mocks"
 
 	mockModel "bank_account/internal/models/mock"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
+
+func TestGetAccountMock(t *testing.T) {
+	serviceMock := &mocks.AccountService{}
+
+	service := &service.Service{
+		AccountService: serviceMock,
+	}
+
+	handler := NewHandler(service)
+
+	cases := []struct {
+		name          string
+		accountNumber string
+		expectedCode  int
+		wantResponse  string
+		mockOn        bool
+		mockService   interface{}
+	}{
+		{
+			name:          "valid",
+			accountNumber: "1234567890",
+			expectedCode:  200,
+			wantResponse:  `"owner": "test",`,
+			mockOn:        true,
+			mockService: func(accountNumber string) (*models.Account, error) {
+				return &models.Account{
+					Owner:         "test",
+					AccountNumber: "1234567890",
+					Balance:       100,
+				}, nil
+			},
+		},
+		{
+			name:          "invalid",
+			accountNumber: "12345678901",
+			expectedCode:  404,
+			wantResponse:  `"error": "account not found"`,
+			mockOn:        true,
+			mockService: func(accountNumber string) (*models.Account, error) {
+				return nil, models.ErrNotFound
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			request, _ := http.NewRequest(http.MethodGet, "/account/"+tc.accountNumber, nil)
+			response := httptest.NewRecorder()
+
+			if tc.mockOn {
+				serviceMock.On("GetAccountByNumber", mock.AnythingOfType("string")).
+					Return(tc.mockService).Once()
+			}
+
+			handler.GetAccountByNumber(response, request)
+
+			assert.Equal(t, tc.expectedCode, response.Code)
+			assert.Contains(t, response.Body.String(), tc.wantResponse)
+
+			serviceMock.AssertExpectations(t)
+		})
+	}
+}
 
 func TestGetAccountByNumber(t *testing.T) {
 	var accModel models.AccountRepository = &mockModel.AccountModel{}
