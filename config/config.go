@@ -19,6 +19,7 @@ var (
 	once     sync.Once
 )
 
+// GetConfig returns a singleton instance of Config struct
 func GetConfig() *Config {
 	once.Do(func() {
 		instance = &Config{}
